@@ -2,6 +2,8 @@ package log
 
 import (
 	"fmt"
+	"io"
+	"os"
 	"runtime"
 	"strings"
 )
@@ -21,12 +23,28 @@ var logLevelStrings = []string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL
 var logLevelColor = []string{"37", "1;35", "1;32", "1;33", "1;31", "31"}
 
 var currentLogLvl = INFO
+var out io.Writer = os.Stderr
+var outFile io.Writer = nil
 
 func SetLogLevel(l logLevel) {
 	if l > FATAL {
 		return
 	}
 	currentLogLvl = l
+}
+
+func SetOutput(o io.Writer) {
+	out = o
+}
+
+// SetOutputFile open or creates the file, with O_APPEND flag
+// panics if os.OpenFile fails
+func SetOutputFile(file string) {
+	f, err := os.OpenFile(file, os.O_RDWR|os.O_CREATE|os.O_APPEND, 755)
+	if err != nil {
+		panic(err)
+	}
+	outFile = f
 }
 
 func (l logLevel) String() string {
@@ -68,7 +86,13 @@ func logF(logLvl logLevel, f string, args ...interface{}) {
 		fileName := file[strings.LastIndex(file, "/")+1:]
 		caller = fmt.Sprintf("%s:%d", fileName, line)
 	}
-	fmt.Printf(color(logLvl, fmt.Sprintf("%+7s %s | %s\n", logLvl, caller, f)), args...)
+	format := color(logLvl, fmt.Sprintf("%+7s %s | %s\n", logLvl, caller, f))
+	if out != nil {
+		fmt.Fprintf(out, format, args...)
+	}
+	if outFile != nil {
+		fmt.Fprintf(outFile, format, args...)
+	}
 }
 
 func color(logLvl logLevel, s string) string {
