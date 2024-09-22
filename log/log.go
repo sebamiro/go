@@ -19,16 +19,21 @@ const (
 	FATAL
 )
 
-var logLevelStrings = []string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
-var logLevelColor = []string{"37", "1;35", "1;32", "1;33", "1;31", "31"}
+func (l logLevel) String() string {
+	return "[" + logLevelStrings[l] + "]"
+}
 
-var currentLogLvl = INFO
-var out io.Writer = os.Stderr
-var outFile io.Writer = nil
+var (
+	logLevelStrings           = [6]string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
+	logLevelColor             = [6]string{"37", "1;35", "1;32", "1;33", "1;31", "31"}
+	currentLogLvl             = INFO
+	out             io.Writer = os.Stderr
+	outFile         io.Writer = nil
+)
 
 func SetLogLevel(l logLevel) {
 	if l > FATAL {
-		return
+		panic("Invalid log level")
 	}
 	currentLogLvl = l
 }
@@ -45,10 +50,6 @@ func SetOutputFile(file string) {
 		panic(err)
 	}
 	outFile = f
-}
-
-func (l logLevel) String() string {
-	return "[" + logLevelStrings[l] + "]"
 }
 
 func Tracef(f string, args ...interface{}) {
