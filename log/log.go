@@ -20,6 +20,15 @@ const (
 var logLevelStrings = []string{"TRACE", "DEBUG", "INFO", "WARN", "ERROR", "FATAL"}
 var logLevelColor = []string{"37", "1;35", "1;32", "1;33", "1;31", "31"}
 
+var currentLogLvl = INFO
+
+func SetLogLevel(l logLevel) {
+	if l > FATAL {
+		return
+	}
+	currentLogLvl = l
+}
+
 func (l logLevel) String() string {
 	return "[" + logLevelStrings[l] + "]"
 }
@@ -49,6 +58,10 @@ func Fatalf(f string, args ...interface{}) {
 }
 
 func logF(logLvl logLevel, f string, args ...interface{}) {
+	if logLvl < currentLogLvl {
+		return
+	}
+
 	var caller string = "unknownCaller"
 	_, file, line, ok := runtime.Caller(2)
 	if ok {
